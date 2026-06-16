@@ -73,8 +73,7 @@ This is a build-in-public project. I'm shipping it one call at a time and docume
 
 The core reliability idea lives in Step 1 and propagates through the whole pipeline. Instead of telling the model *"don't hallucinate"* (which barely works), it is **required to attach a verbatim quote from the source to every requirement it extracts**. A fabricated requirement therefore forces a fabricated quote — and a fabricated quote is caught by a single, free, LLM-free check: does this string actually appear in the original text?
 
-![How grounding makes hallucination detectable](assets/grounding_diagram.png)
-
+![How grounding makes hallucination detectable](assets/grounding.png)
 
 This turns reliability from an act of faith into something verifiable.
 
