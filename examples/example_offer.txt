@@ -1,0 +1,28 @@
+Backend Engineer (Python) — Kapital Pagos
+Ciudad de Guatemala · Híbrido · Tiempo completo
+
+Kapital Pagos es una fintech en crecimiento que procesa pagos digitales para
+comercios en Centroamérica. Buscamos un(a) Backend Engineer mid-level para
+unirse al equipo de plataforma.
+
+Lo que harás:
+- Diseñar y mantener APIs que procesan miles de transacciones diarias.
+- Colaborar con producto y QA en ciclos cortos de entrega.
+- Participar en guardias rotativas (on-call) del equipo.
+
+Requisitos:
+- 3+ años de experiencia desarrollando backend con Python.
+- Experiencia sólida con FastAPI o Django en producción.
+- Dominio de PostgreSQL y diseño de esquemas relacionales.
+- Experiencia desplegando servicios en AWS (Lambda, ECS o EKS).
+- Manejo de pipelines de CI/CD (GitHub Actions o similar).
+
+Deseable:
+- Conocimientos de Kubernetes y Terraform.
+- Experiencia previa en fintech o pagos.
+- Inglés conversacional (B2).
+
+Sobre nosotros:
+Somos un equipo pequeño que se mueve rápido y valora el ownership: cada
+ingeniero es dueño de sus servicios de punta a punta. Ofrecemos presupuesto
+anual de aprendizaje y horario flexible.
