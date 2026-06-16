@@ -75,6 +75,7 @@ The core reliability idea lives in Step 1 and propagates through the whole pipel
 
 ![How grounding makes hallucination detectable](assets/grounding_diagram.png)
 
+
 This turns reliability from an act of faith into something verifiable.
 
 ---
