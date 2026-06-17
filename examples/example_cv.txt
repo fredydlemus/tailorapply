@@ -1,0 +1,26 @@
+María Fernanda López
+Backend Developer
+maria.lopez@email.com · +502 5555-1234 · Ciudad de Guatemala
+
+PERFIL
+Desarrolladora backend con 4 años de experiencia construyendo APIs y servicios en la nube.
+
+EXPERIENCIA
+
+Backend Developer — PagaFácil (2022 – presente)
+- Diseñé y mantuve APIs REST en Python con Django para procesar pagos.
+- Migré servicios monolíticos a contenedores Docker desplegados en AWS ECS.
+- Implementé pipelines de CI/CD con GitHub Actions, reduciendo el tiempo de despliegue a la mitad.
+
+Desarrolladora de Software — Soluciones Delta (2020 – 2022)
+- Desarrollé módulos de facturación con Python y PostgreSQL.
+- Colaboré con el equipo de QA en ciclos de entrega quincenales.
+
+EDUCACIÓN
+Ingeniería en Sistemas — Universidad de San Carlos (2019)
+
+HABILIDADES
+Python, Django, PostgreSQL, Docker, AWS, Git, GitHub Actions
+
+CERTIFICACIONES
+AWS Certified Cloud Practitioner (2023)

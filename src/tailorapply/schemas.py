@@ -13,3 +13,17 @@ class JobProfile(BaseModel):
     requirements: List[Requirement]
     ats_keywords: List[str]
     culture_signals: List[str]
+
+class Experience(BaseModel):
+    role: str = Field("Position, copied from CV")
+    company: str = Field("Company, copied from CV")
+    bullets: list[str] = Field(
+        description="Achievements/responsibilities COPIED VERBATIM from the CV, without rewriting"
+    )
+
+class CVProfile(BaseModel):
+    skills: list[str] = Field(
+        description="Skills explicitly listed in the CV (without inference)"
+    )
+    experiences: list[Experience]
+    certifications: list[str]
