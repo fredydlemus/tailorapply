@@ -27,3 +27,27 @@ class CVProfile(BaseModel):
     )
     experiences: list[Experience]
     certifications: list[str]
+
+class RequirementMatch(BaseModel):
+    requirement: str = Field(
+        description="Exact skill for the job profile being evaluated"
+    )
+    status: Literal["strong_match", "partial_match", "gap"]
+    evidence_from_cv: str | None = Field(
+        description="Direct quote from the CV profile that supports the match; null if it is a gap"
+    )
+    how_to_present: str = Field(
+        description="Honest suggestion for framing this in the application"
+    )
+
+class GapAnalysisLLM(BaseModel):
+    matches: list[RequirementMatch]
+    missing_keywords: list[str]
+    honest_summary: str
+
+class GapAnalysis(BaseModel):
+    fit_score: int
+    must_have_coverage: str
+    matches: list[RequirementMatch]
+    missing_keywords: list[str]
+    honest_summary: str

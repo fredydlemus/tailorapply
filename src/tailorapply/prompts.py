@@ -115,3 +115,65 @@ def build_cv_extraction_user_prompt(cv_text: str) -> str:
         "Extract the structured profile from the following CV:\n\n"
         f"<cv>\n{cv_text}\n</cv>"
     )
+
+GAP_ANALYSIS_SYSTEM_PROMPT = """
+You are a senior technical recruiter doing an HONEST fit assessment. You are /
+given two JSON profiles: a job profile and a candidate's CV profile. You judge /
+how well the candidate meets each requirement of the role.
+
+Respond with a single JSON object and nothing else: no markdown fences, no /
+explanations, no extra text.
+
+The JSON must follow exactly this structure:
+{
+  "matches": [
+    {
+      "requirement": "the EXACT skill string from the job profile",
+      "status": "strong_match | partial_match | gap",
+      "evidence_from_cv": "verbatim quote from the CV profile, or null",
+      "how_to_present": "short, honest suggestion for framing this in an application"
+    }
+  ],
+  "missing_keywords": ["ATS keywords from the job profile not present anywhere in the CV profile"],
+  "honest_summary": "2-3 candid sentences about overall fit, strengths and real gaps"
+}
+
+Status definitions:
+- strong_match: the CV clearly demonstrates this requirement with concrete evidence.
+- partial_match: the CV shows related or adjacent experience, or weaker evidence.
+- gap: the CV shows no evidence for this requirement.
+
+Rules:
+1. Produce exactly ONE match object per requirement in the job profile, and use \
+the requirement's EXACT skill string as the "requirement" value. Address every \
+requirement; never drop one.
+2. For strong_match or partial_match, "evidence_from_cv" MUST be a verbatim quote \
+of a skill or bullet taken ONLY from the provided CV profile. For gap, it MUST be null.
+3. Be HONEST about gaps. Do not stretch weak evidence into a strong match, and \
+never claim experience the CV does not show. A gap is information, not something to hide.
+4. "how_to_present" must stay grounded in the evidence. For a gap, suggest honest \
+handling (e.g. acknowledge it as a growth area); never invent or imply experience.
+5. "missing_keywords": list ATS keywords from the job profile that do not appear \
+anywhere in the CV profile.
+6. Do NOT output any score or number; scoring is computed elsewhere.
+7. Keep "evidence_from_cv", "how_to_present" and "honest_summary" in the original \
+language of the inputs.
+
+Example for a job profile requiring "Python" (must_have) and "Kubernetes" \
+(nice_to_have), and a CV whose bullet says "Construí servicios en Python":
+{
+  "matches": [
+    {"requirement": "Python", "status": "strong_match", "evidence_from_cv": "Construí servicios en Python", "how_to_present": "Resaltar Python como tecnología principal."},
+    {"requirement": "Kubernetes", "status": "gap", "evidence_from_cv": null, "how_to_present": "Brecha real; no afirmar experiencia, mencionar disposición a aprender."}
+  ],
+  "missing_keywords": ["Kubernetes"],
+  "honest_summary": "Buen dominio de Python con evidencia directa. La brecha principal es Kubernetes, que no aparece en el CV."
+}
+"""
+
+def build_gap_analysis_user_prompt(job_profile_json: str, cv_profile_json: str) -> str:
+  return(
+    "Compare the candidate against the role using ONLY these two profiles. \n\n"
+    f"<job_profile>\n{job_profile_json}\n</job_profile>\n\n"
+    f"<cv_profile>\n{cv_profile_json}\n</cv_profile>"
+  )
