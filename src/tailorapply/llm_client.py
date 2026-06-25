@@ -1,6 +1,7 @@
 from openai import OpenAI, max_retries
 from typing import Type, TypeVar
 from pydantic import BaseModel, ValidationError
+from collections.abc import Iterator
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -50,4 +51,18 @@ def call_json(
                 )
     raise RuntimeError(
     f"No valid JSON after {max_retries + 1} attempts. Last error:\n{last_error}")
+
+def call_stream(system_prompt: str, user_prompt: str, model: str) -> Iterator[str]:
+    stream = get_client().chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        stream=True
+    )
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield delta
 

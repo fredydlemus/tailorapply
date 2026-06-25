@@ -12,7 +12,7 @@ from tailorapply.steps import (  # noqa: E402
 
 def main() -> None:
     if len(sys.argv) != 3:
-        raise SystemExit("Uso: python run_paso3.py <oferta.txt> <cv.txt>")
+        raise SystemExit("Use: python run_paso3.py <oferta.txt> <cv.txt>")
 
     job_text = Path(sys.argv[1]).read_text(encoding="utf-8")
     cv_text = Path(sys.argv[2]).read_text(encoding="utf-8")

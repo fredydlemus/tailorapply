@@ -1,10 +1,11 @@
+from collections.abc import Iterator
 import re
 import difflib
 from unicodedata import category
 
-from .config import EXTRACT_MODEL, MAX_INPUT_CHARS, REASON_MODEL, MUST_HAVE_WEIGHT, NICE_TO_HAVE_WEIGHT
-from .llm_client import call_json
-from .prompts import JOB_EXTRACTION_SYSTEM_PROMPT, build_job_extraction_user_prompt, build_cv_extraction_user_prompt, CV_EXTRACTION_SYSTEM_PROMPT, GAP_ANALYSIS_SYSTEM_PROMPT, build_gap_analysis_user_prompt
+from .config import EXTRACT_MODEL, MAX_INPUT_CHARS, REASON_MODEL, MUST_HAVE_WEIGHT, NICE_TO_HAVE_WEIGHT, GENERATE_MODEL
+from .llm_client import call_json, call_stream
+from .prompts import JOB_EXTRACTION_SYSTEM_PROMPT, build_job_extraction_user_prompt, build_cv_extraction_user_prompt, CV_EXTRACTION_SYSTEM_PROMPT, GAP_ANALYSIS_SYSTEM_PROMPT, build_gap_analysis_user_prompt, build_cover_letter_user_prompt, build_letter_system_prompt
 from .schemas import JobProfile, Requirement, CVProfile, GapAnalysis, GapAnalysisLLM
 
 def _normalize(text: str) -> str:
@@ -122,4 +123,25 @@ def verify_gap_analysis(
         "unknown_requirements": sorted(matched_skills - job_skills),
         "inconsistent_status": inconsistent,
         "ungrounded_evidence": ungrounded_evidence,
-    }           
+    }
+
+def generate_cover_letter(analysis: GapAnalysis, job: JobProfile, tone: str = "formal") -> Iterator[str]:
+    yield from call_stream(
+        system_prompt=build_letter_system_prompt(tone),
+        user_prompt=build_cover_letter_user_prompt(job.model_dump_json(indent=2), analysis.model_dump_json(indent=2)),
+        model=GENERATE_MODEL
+    )
+
+def flag_letter_concerns(letter: str, analysis: GapAnalysis) -> list[str]:
+    norm = _normalize(letter)
+    flags = []
+    for m in analysis.matches:
+        if m.status != "gap":
+            continue
+        tokens = [t for t in _normalize(m.requirement).split() if len(t) > 2]
+        if any(re.search(rf"\b{re.escape(t)}\b", norm) for t in tokens):
+            flags.append(
+                f"menciona la brecha '{m.requirement}': verificar que se maneje "
+                "con honestidad, no como experiencia"
+            )
+    return flags

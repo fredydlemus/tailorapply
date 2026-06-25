@@ -177,3 +177,45 @@ def build_gap_analysis_user_prompt(job_profile_json: str, cv_profile_json: str) 
     f"<job_profile>\n{job_profile_json}\n</job_profile>\n\n"
     f"<cv_profile>\n{cv_profile_json}\n</cv_profile>"
   )
+
+LETTER_TONES = {
+  "formal": "Professional and formal tone: measured, respectful, and free of jargon.",
+  "startup": "Warm, direct, and energetic tone—like that of a fast-moving startup. Concise.",
+  "technical": "Technical and precise tone, aimed at an engineering audience. Specific, with no filler."
+}
+
+GENERATE_LETTER_SYSTEM_PROMPT_TEMPLATE = f"""
+You are helping a candidate write a cover letter for a specific role. You are \
+given the job profile and a gap analysis (matches with their evidence and \
+suggested framing, plus missing keywords and an honest symmary).
+
+Write the cover letter directly: output only the letter text, with no preamble, \
+no notes and no markdown headers.
+
+Tone: {tone_instruction}
+
+CRITICAL rules (this is the whole point of the system):
+1. Use ONLY information present in the gap analysis matches and their evidence. \
+Do NOT invent experience, metrics, numbers, projects, employers or skills.
+2. Build the letter around the strong_match and partial_match items, guided by \
+each item's "how_to_present".
+3. For gaps: NEVER claim or imply the skill. You may omit it, or handle it \
+honestly following its "how_to_present" (e.g. willingness to learn).
+4. Do no exaggerate. "Familiar with" must no become "expert in"; keep every \
+claim proportional to the evidence.
+5. Keep it concise: 3-4 short paragraphs.
+6. Write in the language of the inputs.
+7. If the candidate's name is not provided, end with a placeholder like \
+"[Nombre del candidato]" instead of inventing a name.
+"""
+
+def build_letter_system_prompt(tone: str) -> str:
+  instruction = LETTER_TONES.get(tone, LETTER_TONES["formal"])
+  return GENERATE_LETTER_SYSTEM_PROMPT_TEMPLATE.format(tone_instruction=instruction)
+
+def build_cover_letter_user_prompt(job_profile_json: str, gap_analysis_json: str) -> str:
+  return(
+    "Write the cover letter using ONLY these inputs. \n\n"
+    f"<job_profile>\n{job_profile_json}\n<job_profile/>\n\n"
+    f"<gap_analysis>\n{gap_analysis_json}\n</gap_analysis>"
+  )
