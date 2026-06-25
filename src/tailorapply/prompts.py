@@ -184,7 +184,7 @@ LETTER_TONES = {
   "technical": "Technical and precise tone, aimed at an engineering audience. Specific, with no filler."
 }
 
-GENERATE_LETTER_SYSTEM_PROMPT_TEMPLATE = f"""
+GENERATE_LETTER_SYSTEM_PROMPT_TEMPLATE = """
 You are helping a candidate write a cover letter for a specific role. You are \
 given the job profile and a gap analysis (matches with their evidence and \
 suggested framing, plus missing keywords and an honest symmary).
