@@ -51,3 +51,15 @@ class GapAnalysis(BaseModel):
     matches: list[RequirementMatch]
     missing_keywords: list[str]
     honest_summary: str
+
+class Evaluation(BaseModel):
+    grounding_issues: list[str] = Field(
+        description="Claims in the letter NOT supported by the evidence"
+    )
+    missed_strengths: list[str] = Field(
+        description="strong_match that the letter should take advantage of but doesn't use"
+    )
+    verdict: Literal["approve", "revise"]
+    notes_for_revision: str = Field(
+        description="Actionable feedback for the next version; leave blank if approved."
+    )

@@ -5,8 +5,19 @@ from unicodedata import category
 
 from .config import EXTRACT_MODEL, MAX_INPUT_CHARS, REASON_MODEL, MUST_HAVE_WEIGHT, NICE_TO_HAVE_WEIGHT, GENERATE_MODEL
 from .llm_client import call_json, call_stream
-from .prompts import JOB_EXTRACTION_SYSTEM_PROMPT, build_job_extraction_user_prompt, build_cv_extraction_user_prompt, CV_EXTRACTION_SYSTEM_PROMPT, GAP_ANALYSIS_SYSTEM_PROMPT, build_gap_analysis_user_prompt, build_cover_letter_user_prompt, build_letter_system_prompt
-from .schemas import JobProfile, Requirement, CVProfile, GapAnalysis, GapAnalysisLLM
+from .prompts import (
+    JOB_EXTRACTION_SYSTEM_PROMPT, 
+    build_job_extraction_user_prompt, 
+    build_cv_extraction_user_prompt, 
+    CV_EXTRACTION_SYSTEM_PROMPT, 
+    GAP_ANALYSIS_SYSTEM_PROMPT, 
+    build_gap_analysis_user_prompt, 
+    build_cover_letter_user_prompt, 
+    build_letter_system_prompt,
+    EVALUATOR_SYSTEM_PROMPT,
+    build_evaluation_user_prompt
+    )
+from .schemas import JobProfile, Requirement, CVProfile, GapAnalysis, GapAnalysisLLM, Evaluation
 
 def _normalize(text: str) -> str:
     return " ".join(text.split()).lower()
@@ -112,9 +123,9 @@ def verify_gap_analysis(
     for m in analysis.matches:
         has_evidence = bool(m.evidence_from_cv and m.evidence_from_cv.strip())
         if m.status in ("strong_match", "partial_match") and not has_evidence:
-            inconsistent.append(f"{m.requirement}: '{m.status}' sin evidencia")
+            inconsistent.append(f"{m.requirement}: '{m.status}' without evidence")
         if m.status == "gap" and has_evidence:
-            inconsistent.append(f"{m.requirement}: 'gap' pero trae evidencia")
+            inconsistent.append(f"{m.requirement}: 'gap' but bring evidence")
         if has_evidence and not appears_verbatim_ish(m.evidence_from_cv, cv_source):
             ungrounded_evidence.append(f'{m.requirement}: "{m.evidence_from_cv}"')
 
@@ -125,10 +136,10 @@ def verify_gap_analysis(
         "ungrounded_evidence": ungrounded_evidence,
     }
 
-def generate_cover_letter(analysis: GapAnalysis, job: JobProfile, tone: str = "formal") -> Iterator[str]:
+def generate_cover_letter(analysis: GapAnalysis, job: JobProfile, tone: str = "formal", feedback: str = "") -> Iterator[str]:
     yield from call_stream(
         system_prompt=build_letter_system_prompt(tone),
-        user_prompt=build_cover_letter_user_prompt(job.model_dump_json(indent=2), analysis.model_dump_json(indent=2)),
+        user_prompt=build_cover_letter_user_prompt(job.model_dump_json(indent=2), analysis.model_dump_json(indent=2), feedback),
         model=GENERATE_MODEL
     )
 
@@ -141,7 +152,53 @@ def flag_letter_concerns(letter: str, analysis: GapAnalysis) -> list[str]:
         tokens = [t for t in _normalize(m.requirement).split() if len(t) > 2]
         if any(re.search(rf"\b{re.escape(t)}\b", norm) for t in tokens):
             flags.append(
-                f"menciona la brecha '{m.requirement}': verificar que se maneje "
-                "con honestidad, no como experiencia"
+                f"mentions the gap '{m.requirement}': verify that it is handled "
+                "honestly, not as an experience"
             )
     return flags
+
+def evaluate_letter(letter: str, analysis: GapAnalysis, job: JobProfile) -> Evaluation:
+    return call_json(
+        system_prompt=EVALUATOR_SYSTEM_PROMPT,
+        user_prompt=build_evaluation_user_prompt(
+            letter, job.model_dump_json(indent=2), analysis.model_dump_json(indent=2)
+        ),
+        schema=Evaluation,
+        model=REASON_MODEL
+    )
+
+def verify_evaluation(evaluation: Evaluation) -> list[str]:
+    problems = []
+    if evaluation.verdict == "approve" and evaluation.grounding_issues:
+        problems.append("verdict 'approve' but there are grounding_issues")
+    if(
+        evaluation.verdict == "revise"
+        and not evaluation.grounding_issues
+        and not evaluation.notes_for_revision.strip()
+    ):
+        problems.append("'Revise' verdict, but with no issues or actionable notes.")
+    return problems
+
+def _build_revision_feedback(previous_letter: str, evaluation: Evaluation) -> str:
+    issues = "\n".join(f"- {i}" for i in evaluation.grounding_issues) or "none"
+    missed = "\n".join(f"- {s}" for s in evaluation.missed_strengths) or "(none)"
+    return(
+        f"Previous draft:\n{previous_letter}\n\n"
+        f"Grounding issues detected:\n{issues}\n\n"
+        f"Untapped strengths:\n{missed}\n\n"
+        f"Instructions for making corrections:\n{evaluation.notes_for_revision}"
+    )
+
+def tailor_cover_letter(analysis: GapAnalysis, job: JobProfile, tone: str = "formal", max_revisions: int = 2) -> tuple[str, list[Evaluation]]:
+    evaluations: list[Evaluation] = []
+    feedback = ""
+    letter = ""
+
+    for _ in range(max_revisions + 1):
+        letter = "".join(generate_cover_letter(analysis, job, tone=tone, feedback=feedback))
+        evaluation = evaluate_letter(letter, analysis, job)
+        evaluations.append(evaluation)
+        if evaluation.verdict == "approve":
+            break
+        feedback = _build_revision_feedback(letter, evaluation)
+    return letter, evaluations

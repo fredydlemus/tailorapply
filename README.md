@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.11+-3776AB?logo=python&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/validation-pydantic_v2-E92063)
-![Status](https://img.shields.io/badge/status-work_in_progress-orange)
+![Status](https://img.shields.io/badge/status-pipeline_complete-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 TailorApply takes a job posting and a CV and produces a tailored cover letter and rewritten résumé bullets. The interesting part is not the output — plenty of tools do that. It's that the pipeline is designed so **every claim it makes is grounded in your real CV and the real posting, and is automatically verified**. Most "AI cover letter" tools happily invent experience you don't have. This one is built not to.
@@ -62,10 +62,10 @@ This is a build-in-public project. I'm shipping it one call at a time and docume
 | Step | What it does | Status |
 | --- | --- | --- |
 | 1 | Extract a structured profile from the job posting + verify grounding | ✅ Implemented |
-| 2 | Extract a structured profile from the CV | 🚧 Next |
-| 3 | Gap analysis with grounded evidence and a fit score | 📋 Planned |
-| 4 | Generate a tailored cover letter and bullets (streamed, tone-configurable) | 📋 Planned |
-| 5 | Evaluator-optimizer loop that critiques and improves the letter | 📋 Planned (stretch) |
+| 2 | Extract a structured profile from the CV | ✅ Implemented |
+| 3 | Gap analysis with grounded evidence and a fit score | ✅ Implemented |
+| 4 | Generate a tailored cover letter (streamed, tone-configurable) | ✅ Implemented |
+| 5 | Evaluator-optimizer loop that critiques and improves the letter | ✅ Implemented |
 
 ---
 
@@ -207,10 +207,10 @@ Deseable:
 ## Roadmap
 
 - [x] Step 1 — job posting → structured profile, with grounding verification
-- [ ] Step 2 — CV → structured profile
-- [ ] Step 3 — gap analysis (fit score + grounded, evidence-backed matches)
-- [ ] Step 4 — letter + bullet generation (streaming, configurable tone)
-- [ ] Step 5 — evaluator-optimizer loop (critique → improved draft)
+- [x] Step 2 — CV → structured profile
+- [x] Step 3 — gap analysis (fit score + grounded, evidence-backed matches)
+- [x] Step 4 — cover letter generation (streaming, configurable tone)
+- [x] Step 5 — evaluator-optimizer loop (critique → improved draft)
 - [ ] CLI polish and a small set of regression examples (proto-evals)
 
 ---

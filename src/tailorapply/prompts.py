@@ -213,9 +213,58 @@ def build_letter_system_prompt(tone: str) -> str:
   instruction = LETTER_TONES.get(tone, LETTER_TONES["formal"])
   return GENERATE_LETTER_SYSTEM_PROMPT_TEMPLATE.format(tone_instruction=instruction)
 
-def build_cover_letter_user_prompt(job_profile_json: str, gap_analysis_json: str) -> str:
-  return(
+def build_cover_letter_user_prompt(job_profile_json: str, gap_analysis_json: str, feedback: str = "") -> str:
+  prompt = (
     "Write the cover letter using ONLY these inputs. \n\n"
     f"<job_profile>\n{job_profile_json}\n<job_profile/>\n\n"
+    f"<gap_analysis>\n{gap_analysis_json}\n</gap_analysis>"
+  )
+
+  if feedback.strip():
+    prompt += (
+      "\n\nThis is a REVISION. Produce an improved version that fixes the "
+      "issues below while still following all the rules. \n"
+      f"<revesion_feedback>\n{feedback}\n</revesion_feedback>"
+    )
+
+  return prompt
+
+EVALUATOR_SYSTEM_PROMPT = """\
+You are a strict, skeptical reviewer whose job is to protect FACTUAL ACCURACY in \
+a cover letter. You are given a cover letter draft, the job profile, and the gap \
+analysis that contains the evidence behind every match.
+
+Check wheter every claim in the letter is supported by the evidence in the gap \
+analysis. The letter must not invent experience, inflate qualifications, or present \
+a gap as if it were experience.
+
+Respond with a single JSON object and nothing else:
+{
+  "grounding_issues": ["each specific claim in the letter not supported by the evidence"],
+  "missed_strengths": ["strong_match requirements whose evidence the letter fails to use"],
+  "verdict": "approve | revise",
+  "notes_for_revision": "concrete, actionable instructions to fix the issues; empty string if approve"
+}
+
+Rules:
+1. Paraphrasing is EXPECTED and fine. A good letter rewords the evidence. Only flag \
+a claim when its CONTENT goes beyond the evidence: invented skills/metrics/employers, \
+inflation (e.g. turning "familiar with" into "expert in"), or a gap presented as \
+experience. NEVER flag mere rewording.
+2. "grounding_issues": list each unsupported claim, describing the specific phrase.
+3. "missed_strengths": list strong_match requirements the letter does not leverage.
+4. "verdict": "revise" if there is ANY grounding issue; "approve" only if the letter \
+is fully grounded and uses the main strengths.
+5. "notes_for_revision": specific instructions for the next draft (which claim to \
+remove or soften, which strength to add). Empty string if approve.
+6. Be strict about grounding, but do NOT invent issues. If the letter is faithful, approve it.
+7. Output only JSON, no fences.
+"""
+
+def build_evaluation_user_prompt(letter: str, job_profile_json: str, gap_analysis_json: str) -> str:
+  return(
+    "Evaluate this cover letter against the evidence. \n\n"
+    f"<cover_letter>\n{letter}\n</cover_letter>\n\n"
+    f"<job_profile>\n{job_profile_json}\n</job_profile>\n\n"
     f"<gap_analysis>\n{gap_analysis_json}\n</gap_analysis>"
   )
